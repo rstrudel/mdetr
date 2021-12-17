@@ -1,0 +1,13 @@
+{
+    "combine_datasets": ["flickr", "mixed"],
+    "combine_datasets_val": ["gqa", "flickr", "refexp"],
+    "coco_path": "/gpfsscratch/rech/eta/ufz72sf/coco",
+    "vg_img_path": "/gpfsscratch/rech/eta/ufz72sf/gqa/images",
+    "flickr_img_path": "/gpfsscratch/rech/eta/ufz72sf/flickr30k-images",
+    "refexp_ann_path": "/gpfsscratch/rech/eta/ufz72sf/mdetr_annotations",
+    "flickr_ann_path": "/gpfsscratch/rech/eta/ufz72sf/mdetr_annotations",
+    "gqa_ann_path": "/gpfsscratch/rech/eta/ufz72sf/mdetr_annotations",
+    "refexp_dataset_name": "all",
+    "GT_type": "separate",
+    "flickr_dataset_path": "/gpfsscratch/rech/eta/ufz72sf/flickr"
+}
