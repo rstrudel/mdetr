@@ -23,32 +23,23 @@ def parse_args():
     detection_parser = detection.get_args_parser()
     parser = argparse.ArgumentParser("Submitit detection", parents=[detection_parser])
 
-    parser.add_argument(
-        "--partition", default=None, type=str, help="Partition where to submit"
-    )
-    parser.add_argument(
-        "--ngpus", default=8, type=int, help="Number of gpus to request on each node"
-    )
-    parser.add_argument(
-        "--nodes", default=4, type=int, help="Number of nodes to request"
-    )
+    parser.add_argument("--partition", default=None, type=str, help="Partition where to submit")
+    parser.add_argument("--ngpus", default=8, type=int, help="Number of gpus to request on each node")
+    parser.add_argument("--nodes", default=4, type=int, help="Number of nodes to request")
     parser.add_argument("--timeout", default=1200, type=int, help="Duration of the job")
-    parser.add_argument(
-        "--job_dir", default="", type=str, help="Job dir. Leave empty for automatic."
-    )
-    parser.add_argument(
-        "--mail",
-        default="",
-        type=str,
-        help="Email this user when the job finishes if specified",
-    )
+    parser.add_argument("--job_dir", default="", type=str, help="Job dir. Leave empty for automatic.")
+    parser.add_argument("--mail", default="", type=str, help="Email this user when the job finishes if specified")
     return parser.parse_args()
 
 
 def get_shared_folder(args) -> Path:
-    work_dir = os.getenv("WORK")
-    p = Path(work_dir) / "mdetr_models"
-    return p
+    user = os.getenv("USER")
+    checkpoint_path = os.path.expandvars("$WORK/mdetr_models/")
+    if Path(checkpoint_path).is_dir():
+        p = Path(checkpoint_path)
+        p.mkdir(exist_ok=True)
+        return p
+    raise RuntimeError("No shared folder available")
 
 
 def get_init_file(args):
@@ -73,11 +64,7 @@ def grid_parameters(grid: Dict):
         yield dict(zip(grid.keys(), p))
 
 
-def sweep(
-    executor: submitit.Executor,
-    args: argparse.ArgumentParser,
-    hyper_parameters: Iterable,
-):
+def sweep(executor: submitit.Executor, args: argparse.ArgumentParser, hyper_parameters: Iterable):
     jobs = []
     with executor.batch():
         for grid_data in hyper_parameters:
@@ -101,9 +88,7 @@ class Trainer(object):
         import os
 
         os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-        socket_name = (
-            os.popen("ip r | grep default | awk '{print $5}'").read().strip("\n")
-        )
+        socket_name = os.popen("ip r | grep default | awk '{print $5}'").read().strip("\n")
         print("Setting GLOO and NCCL sockets IFNAME to: {}".format(socket_name))
         os.environ["GLOO_SOCKET_IFNAME"] = socket_name
         os.environ["MDETR_CPU_REDUCE"] = "1"
@@ -133,9 +118,7 @@ class Trainer(object):
         import submitit
 
         job_env = submitit.JobEnvironment()
-        self.args.output_dir = Path(
-            str(self.args.output_dir).replace("%j", str(job_env.job_id))
-        )
+        self.args.output_dir = Path(str(self.args.output_dir).replace("%j", str(job_env.job_id)))
         self.args.gpu = job_env.local_rank
         self.args.rank = job_env.global_rank
         self.args.world_size = job_env.num_tasks
@@ -161,7 +144,7 @@ def main():
         kwargs["slurm_partition"] = partition
 
     executor.update_parameters(
-        mem_gb=62 * num_gpus_per_node,
+        mem_gb=16 * num_gpus_per_node,
         gpus_per_node=num_gpus_per_node,
         tasks_per_node=num_gpus_per_node,  # one task per GPU
         cpus_per_task=10,
@@ -174,9 +157,7 @@ def main():
 
     executor.update_parameters(name="detectransformer")
     if args.mail:
-        executor.update_parameters(
-            additional_parameters={"mail-user": args.mail, "mail-type": "END"}
-        )
+        executor.update_parameters(additional_parameters={"mail-user": args.mail, "mail-type": "END"})
 
     args.dist_url = get_init_file(args).as_uri()
     args.output_dir = args.job_dir

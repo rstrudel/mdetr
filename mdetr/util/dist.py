@@ -7,6 +7,7 @@ By default, the reduce of metrics and such are done on GPU, since it's more stra
 If you want to reduce on CPU instead (required for big datasets like GQA), use the env variable MDETR_CPU_REDUCE=1
 """
 import functools
+import hostlist
 import io
 import os
 
@@ -202,18 +203,14 @@ def save_on_master(*args, **kwargs):
 
 
 def init_distributed_mode(args):
-    """Initialize distributed training, if appropriate"""
-    if "RANK" in os.environ and "WORLD_SIZE" in os.environ:
-        args.rank = int(os.environ["RANK"])
-        args.world_size = int(os.environ["WORLD_SIZE"])
-        args.gpu = int(os.environ["LOCAL_RANK"])
-    elif "SLURM_PROCID" in os.environ:
-        args.rank = int(os.environ["SLURM_PROCID"])
-        args.gpu = args.rank % torch.cuda.device_count()
+    gpu_ids = os.environ["SLURM_STEP_GPUS"].split(",")
+    os.environ["MASTER_PORT"] = str(12345 + int(min(gpu_ids)))
+
+    if "SLURM_JOB_NODELIST" in os.environ:
+        hostnames = hostlist.expand_hostlist(os.environ["SLURM_JOB_NODELIST"])
+        os.environ["MASTER_ADDR"] = hostnames[0]
     else:
-        print("Not using distributed mode")
-        args.distributed = False
-        return
+        os.environ["MASTER_ADDR"] = "127.0.0.1"
 
     args.distributed = True
 
@@ -222,7 +219,7 @@ def init_distributed_mode(args):
     print("| distributed init (rank {}): {}".format(args.rank, args.dist_url), flush=True)
 
     dist.init_process_group(
-        backend=args.dist_backend, init_method=args.dist_url, world_size=args.world_size, rank=args.rank
+        backend=args.dist_backend, world_size=args.world_size, rank=args.rank
     )
     dist.barrier()
     setup_for_distributed(args.rank == 0)
