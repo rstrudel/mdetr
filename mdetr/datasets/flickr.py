@@ -27,9 +27,7 @@ def build(image_set, args):
     if args.test:
         ann_file = Path(args.flickr_ann_path) / f"final_flickr_{identifier}_test.json"
     else:
-        ann_file = (
-            Path(args.flickr_ann_path) / f"final_flickr_{identifier}_{image_set}.json"
-        )
+        ann_file = Path(args.flickr_ann_path) / f"final_flickr_{identifier}_{image_set}.json"
 
     tokenizer = AutoTokenizer.from_pretrained(
         args.text_encoder_type, local_files_only=True
@@ -37,10 +35,10 @@ def build(image_set, args):
     dataset = FlickrDetection(
         img_dir,
         ann_file,
-        transforms=None,
+        transforms=make_coco_transforms(image_set, cautious=True),
         return_masks=False,
         return_tokens=True,  # args.contrastive_align_loss,
         tokenizer=tokenizer,
-        is_train=image_set == "train",
+        is_train=image_set=="train"
     )
     return dataset

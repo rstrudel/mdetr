@@ -66,21 +66,14 @@ def hflip(image, target):
     target = target.copy()
     if "boxes" in target:
         boxes = target["boxes"]
-        boxes = boxes[:, [2, 1, 0, 3]] * torch.as_tensor(
-            [-1, 1, -1, 1]
-        ) + torch.as_tensor([w, 0, w, 0])
+        boxes = boxes[:, [2, 1, 0, 3]] * torch.as_tensor([-1, 1, -1, 1]) + torch.as_tensor([w, 0, w, 0])
         target["boxes"] = boxes
 
     if "masks" in target:
         target["masks"] = target["masks"].flip(-1)
 
     if "caption" in target:
-        caption = (
-            target["caption"]
-            .replace("left", "[TMP]")
-            .replace("right", "left")
-            .replace("[TMP]", "right")
-        )
+        caption = target["caption"].replace("left", "[TMP]").replace("right", "left").replace("[TMP]", "right")
         target["caption"] = caption
 
     return flipped_image, target
@@ -121,17 +114,13 @@ def resize(image, target, size, max_size=None):
     if target is None:
         return rescaled_image, None
 
-    ratios = tuple(
-        float(s) / float(s_orig) for s, s_orig in zip(rescaled_image.size, image.size)
-    )
+    ratios = tuple(float(s) / float(s_orig) for s, s_orig in zip(rescaled_image.size, image.size))
     ratio_width, ratio_height = ratios
 
     target = target.copy()
     if "boxes" in target:
         boxes = target["boxes"]
-        scaled_boxes = boxes * torch.as_tensor(
-            [ratio_width, ratio_height, ratio_width, ratio_height]
-        )
+        scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
         target["boxes"] = scaled_boxes
 
     if "area" in target:
@@ -143,10 +132,7 @@ def resize(image, target, size, max_size=None):
     target["size"] = torch.tensor([h, w])
 
     if "masks" in target:
-        target["masks"] = (
-            interpolate(target["masks"][:, None].float(), size, mode="nearest")[:, 0]
-            > 0.5
-        )
+        target["masks"] = interpolate(target["masks"][:, None].float(), size, mode="nearest")[:, 0] > 0.5
 
     return rescaled_image, target
 
@@ -160,9 +146,7 @@ def pad(image, target, padding):
     # should we do something wrt the original size?
     target["size"] = torch.tensor(padded_image[::-1])
     if "masks" in target:
-        target["masks"] = torch.nn.functional.pad(
-            target["masks"], (0, padding[0], 0, padding[1])
-        )
+        target["masks"] = torch.nn.functional.pad(target["masks"], (0, padding[0], 0, padding[1]))
     return padded_image, target
 
 
@@ -189,11 +173,7 @@ class RandomSizeCrop(object):
             h = random.randint(self.min_size, min(img.height, self.max_size))
             region = T.RandomCrop.get_params(img, [h, w])
             result_img, result_target = crop(img, target, region)
-            if (
-                not self.respect_boxes
-                or len(result_target["boxes"]) == init_boxes
-                or i == max_patience - 1
-            ):
+            if not self.respect_boxes or len(result_target["boxes"]) == init_boxes or i == max_patience - 1:
                 return result_img, result_target
         return result_img, result_target
 

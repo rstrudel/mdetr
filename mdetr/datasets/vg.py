@@ -27,7 +27,7 @@ def build(image_set, args):
     dataset = VGDetection(
         img_dir,
         ann_file,
-        transforms=None,
+        transforms=make_coco_transforms(image_set, cautious=True),
         return_masks=args.masks,
         return_tokens=True,
         tokenizer=tokenizer,

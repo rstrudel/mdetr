@@ -42,9 +42,7 @@ class CustomCocoDetection(VisionDataset):
         target_transform: Optional[Callable] = None,
         transforms: Optional[Callable] = None,
     ) -> None:
-        super(CustomCocoDetection, self).__init__(
-            root_coco, transforms, transform, target_transform
-        )
+        super(CustomCocoDetection, self).__init__(root_coco, transforms, transform, target_transform)
         from pycocotools.coco import COCO
 
         self.coco = COCO(annFile)
@@ -83,21 +81,10 @@ class CustomCocoDetection(VisionDataset):
 class MixedDetection(CustomCocoDetection):
     """Same as the modulated detection dataset, except with multiple img sources"""
 
-    def __init__(
-        self,
-        img_folder_coco,
-        img_folder_vg,
-        ann_file,
-        transforms,
-        return_masks,
-        return_tokens,
-        tokenizer,
-    ):
+    def __init__(self, img_folder_coco, img_folder_vg, ann_file, transforms, return_masks, return_tokens, tokenizer):
         super(MixedDetection, self).__init__(img_folder_coco, img_folder_vg, ann_file)
         self._transforms = transforms
-        self.prepare = ConvertCocoPolysToMask(
-            return_masks, return_tokens, tokenizer=tokenizer
-        )
+        self.prepare = ConvertCocoPolysToMask(return_masks, return_tokens, tokenizer=tokenizer)
 
     def __getitem__(self, idx):
         img, target = super(MixedDetection, self).__getitem__(idx)
@@ -114,9 +101,7 @@ def build(image_set, args):
     vg_img_dir = Path(args.vg_img_path)
     coco_img_dir = Path(args.coco_path) / f"{image_set}2014"
     assert vg_img_dir.exists(), f"provided VG img path {vg_img_dir} does not exist"
-    assert (
-        coco_img_dir.exists()
-    ), f"provided coco img path {coco_img_dir} does not exist"
+    assert coco_img_dir.exists(), f"provided coco img path {coco_img_dir} does not exist"
 
     ann_file = Path(args.gqa_ann_path) / f"final_mixed_{image_set}.json"
 
@@ -127,8 +112,7 @@ def build(image_set, args):
         coco_img_dir,
         vg_img_dir,
         ann_file,
-        # transforms=None,
-        transforms=None,
+        transforms=make_coco_transforms(image_set, cautious=True),
         return_masks=args.masks,
         return_tokens=True,
         tokenizer=tokenizer,

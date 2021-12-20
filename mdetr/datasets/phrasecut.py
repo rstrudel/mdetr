@@ -25,9 +25,7 @@ def build(image_set, args):
         ann_file = Path(args.phrasecut_ann_path) / f"finetune_phrasecut_miniv.json"
         image_set = "val"
     else:
-        ann_file = (
-            Path(args.phrasecut_ann_path) / f"finetune_phrasecut_{image_set}.json"
-        )
+        ann_file = Path(args.phrasecut_ann_path) / f"finetune_phrasecut_{image_set}.json"
 
     if args.test:
         ann_file = Path(args.phrasecut_ann_path) / f"finetune_phrasecut_test.json"
@@ -38,7 +36,7 @@ def build(image_set, args):
     dataset = PhrasecutDetection(
         img_dir,
         ann_file,
-        transforms=None,
+        transforms=make_coco_transforms(image_set, cautious=True),
         return_masks=args.masks,
         return_tokens=True,  # args.contrastive_align_loss,
         tokenizer=tokenizer,

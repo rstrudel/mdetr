@@ -145,9 +145,7 @@ class ClevrQuestion(torch.utils.data.Dataset):
 
 def make_clevr_transforms(image_set, cautious=False):
 
-    normalize = T.Compose(
-        [T.ToTensor(), T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]
-    )
+    normalize = T.Compose([T.ToTensor(), T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
     scales = [256, 288, 320, 352, 384]
 
@@ -185,9 +183,7 @@ def build(dataset_file, image_set, args):
 
     if dataset_file == "clevr_question":
         if args.clevr_variant == "humans":
-            assert (
-                args.no_detection
-            ), "CLEVR-Humans doesn't have boxes, please disable detection"
+            assert args.no_detection, "CLEVR-Humans doesn't have boxes, please disable detection"
             im_set = image_set
             if args.test:
                 im_set = "test"
@@ -195,9 +191,7 @@ def build(dataset_file, image_set, args):
             img_dir = Path(args.clevr_img_path) / f"{im_set}"
             image_set = "train" if im_set == "train" else "val"
         elif args.clevr_variant == "cogent":
-            assert (
-                image_set != "train"
-            ), "Please train CoGenT with 'clevr' dataset, not 'clevr_question'"
+            assert image_set != "train", "Please train CoGenT with 'clevr' dataset, not 'clevr_question'"
             im_set = args.cogent_set
             ann_file = Path(args.clevr_ann_path) / f"CLEVR_{im_set}_questions.json"
             img_dir = Path(args.clevr_img_path) / f"{im_set}"

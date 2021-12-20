@@ -58,13 +58,10 @@ class RefExpEvaluator(object):
                 prediction = self.predictions[image_id]
                 assert prediction is not None
                 sorted_scores_boxes = sorted(
-                    zip(prediction["scores"].tolist(), prediction["boxes"].tolist()),
-                    reverse=True,
+                    zip(prediction["scores"].tolist(), prediction["boxes"].tolist()), reverse=True
                 )
                 sorted_scores, sorted_boxes = zip(*sorted_scores_boxes)
-                sorted_boxes = torch.cat(
-                    [torch.as_tensor(x).view(1, 4) for x in sorted_boxes]
-                )
+                sorted_boxes = torch.cat([torch.as_tensor(x).view(1, 4) for x in sorted_boxes])
                 target_bbox = target[0]["bbox"]
                 converted_bbox = [
                     target_bbox[0],
@@ -72,9 +69,7 @@ class RefExpEvaluator(object):
                     target_bbox[2] + target_bbox[0],
                     target_bbox[3] + target_bbox[1],
                 ]
-                giou = generalized_box_iou(
-                    sorted_boxes, torch.as_tensor(converted_bbox).view(-1, 4)
-                )
+                giou = generalized_box_iou(sorted_boxes, torch.as_tensor(converted_bbox).view(-1, 4))
                 for k in self.k:
                     if max(giou[:k]) >= self.thresh_iou:
                         dataset2score[img_info["dataset_name"]][k] += 1.0
@@ -102,15 +97,9 @@ def build(image_set, args):
     if refexp_dataset_name in ["refcoco", "refcoco+", "refcocog"]:
         if args.test:
             test_set = args.test_type
-            ann_file = (
-                Path(args.refexp_ann_path)
-                / f"finetune_{refexp_dataset_name}_{test_set}.json"
-            )
+            ann_file = Path(args.refexp_ann_path) / f"finetune_{refexp_dataset_name}_{test_set}.json"
         else:
-            ann_file = (
-                Path(args.refexp_ann_path)
-                / f"finetune_{refexp_dataset_name}_{image_set}.json"
-            )
+            ann_file = Path(args.refexp_ann_path) / f"finetune_{refexp_dataset_name}_{image_set}.json"
     elif refexp_dataset_name in ["all"]:
         ann_file = Path(args.refexp_ann_path) / f"final_refexp_{image_set}.json"
     else:
@@ -122,7 +111,7 @@ def build(image_set, args):
     dataset = RefExpDetection(
         img_dir,
         ann_file,
-        transforms=None,
+        transforms=make_coco_transforms(image_set, cautious=True),
         return_masks=args.masks,
         return_tokens=True,
         tokenizer=tokenizer,

@@ -50,9 +50,7 @@ class ModulatedDetection(torchvision.datasets.CocoDetection):
 
         if "tokens_positive_eval" in coco_img and not self.is_train:
             tokenized = self.prepare.tokenizer(caption, return_tensors="pt")
-            target["positive_map_eval"] = create_positive_map(
-                tokenized, coco_img["tokens_positive_eval"]
-            )
+            target["positive_map_eval"] = create_positive_map(tokenized, coco_img["tokens_positive_eval"])
             target["nb_eval"] = len(target["positive_map_eval"])
 
         return img, target
@@ -161,9 +159,7 @@ class ConvertCocoPolysToMask(object):
 
         isfinal = None
         if anno and "isfinal" in anno[0]:
-            isfinal = torch.as_tensor(
-                [obj["isfinal"] for obj in anno], dtype=torch.float
-            )
+            isfinal = torch.as_tensor([obj["isfinal"] for obj in anno], dtype=torch.float)
 
         tokens_positive = [] if self.return_tokens else None
         if self.return_tokens and anno and "tokens" in anno[0]:
@@ -202,9 +198,7 @@ class ConvertCocoPolysToMask(object):
 
         # for conversion to coco api
         area = torch.tensor([obj["area"] for obj in anno])
-        iscrowd = torch.tensor(
-            [obj["iscrowd"] if "iscrowd" in obj else 0 for obj in anno]
-        )
+        iscrowd = torch.tensor([obj["iscrowd"] if "iscrowd" in obj else 0 for obj in anno])
         target["area"] = area[keep]
         target["iscrowd"] = iscrowd[keep]
 
@@ -214,17 +208,13 @@ class ConvertCocoPolysToMask(object):
         if self.return_tokens and self.tokenizer is not None:
             assert len(target["boxes"]) == len(target["tokens_positive"])
             tokenized = self.tokenizer(caption, return_tensors="pt")
-            target["positive_map"] = create_positive_map(
-                tokenized, target["tokens_positive"]
-            )
+            target["positive_map"] = create_positive_map(tokenized, target["tokens_positive"])
         return image, target
 
 
 def make_coco_transforms(image_set, cautious):
 
-    normalize = T.Compose(
-        [T.ToTensor(), T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]
-    )
+    normalize = T.Compose([T.ToTensor(), T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
     scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
 
@@ -249,7 +239,12 @@ def make_coco_transforms(image_set, cautious):
         )
 
     if image_set == "val":
-        return T.Compose([T.RandomResize([800], max_size=max_size), normalize,])
+        return T.Compose(
+            [
+                T.RandomResize([800], max_size=max_size),
+                normalize,
+            ]
+        )
 
     raise ValueError(f"unknown {image_set}")
 
@@ -267,8 +262,7 @@ def build(image_set, args):
     dataset = CocoDetection(
         img_folder,
         ann_file,
-        # transforms=make_coco_transforms(image_set, False),
-        transforms=None,
+        transforms=make_coco_transforms(image_set, False),
         return_masks=args.masks,
     )
     return dataset
