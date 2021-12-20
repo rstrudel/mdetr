@@ -37,26 +37,18 @@ class Transformer(nn.Module):
         super().__init__()
 
         self.pass_pos_and_query = pass_pos_and_query
-        encoder_layer = TransformerEncoderLayer(
-            d_model, nhead, dim_feedforward, dropout, activation, normalize_before
-        )
+        encoder_layer = TransformerEncoderLayer(d_model, nhead, dim_feedforward, dropout, activation, normalize_before)
         encoder_norm = nn.LayerNorm(d_model) if normalize_before else None
-        self.encoder = TransformerEncoder(
-            encoder_layer, num_encoder_layers, encoder_norm
-        )
+        self.encoder = TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm)
 
-        decoder_layer = TransformerDecoderLayer(
-            d_model, nhead, dim_feedforward, dropout, activation, normalize_before
-        )
+        decoder_layer = TransformerDecoderLayer(d_model, nhead, dim_feedforward, dropout, activation, normalize_before)
         decoder_norm = nn.LayerNorm(d_model)
         self.decoder = TransformerDecoder(
-            decoder_layer,
-            num_decoder_layers,
-            decoder_norm,
-            return_intermediate=return_intermediate_dec,
+            decoder_layer, num_decoder_layers, decoder_norm, return_intermediate=return_intermediate_dec
         )
 
         self.CLS = nn.Embedding(1, d_model) if contrastive_loss else None
+
         self._reset_parameters()
 
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -115,9 +107,7 @@ class Transformer(nn.Module):
                 src = torch.cat((CLS, src))
 
                 # Adding zeros as the first token in the sequence to be compatible with the CLS token
-                pos_embed = torch.cat(
-                    (torch.zeros(1, bs, self.d_model, device=device), pos_embed)
-                )
+                pos_embed = torch.cat((torch.zeros(1, bs, self.d_model, device=device), pos_embed))
 
                 # Adding one mask item to the beginning of the mask to be compatible with CLS token
                 cls_pad = torch.zeros(bs, 1).bool().to(device)
@@ -126,19 +116,12 @@ class Transformer(nn.Module):
             if self.pass_pos_and_query:
                 tgt = torch.zeros_like(query_embed)
             else:
-                src, tgt, query_embed, pos_embed = (
-                    src + 0.1 * pos_embed,
-                    query_embed,
-                    None,
-                    None,
-                )
+                src, tgt, query_embed, pos_embed = src + 0.1 * pos_embed, query_embed, None, None
 
             device = src.device
             if isinstance(text[0], str):
                 # Encode the text
-                tokenized = self.tokenizer.batch_encode_plus(
-                    text, padding="longest", return_tensors="pt"
-                ).to(device)
+                tokenized = self.tokenizer.batch_encode_plus(text, padding="longest", return_tensors="pt").to(device)
                 encoded_text = self.text_encoder(**tokenized)
 
                 # Transpose memory because pytorch's attention expects sequence first
@@ -157,9 +140,7 @@ class Transformer(nn.Module):
             # For mask, sequence dimension is second
             mask = torch.cat([mask, text_attention_mask], dim=1)
             # Pad the pos_embed with 0 so that the addition will be a no-op for the text tokens
-            pos_embed = torch.cat(
-                [pos_embed, torch.zeros_like(text_memory_resized)], dim=0
-            )
+            pos_embed = torch.cat([pos_embed, torch.zeros_like(text_memory_resized)], dim=0)
 
             img_memory = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)
 
@@ -170,12 +151,8 @@ class Transformer(nn.Module):
                 "text_memory_resized": text_memory_resized,
                 "text_memory": text_memory,
                 "img_memory": img_memory,
-                "text_pooled_op": encoded_text.pooler_output
-                if self.CLS is not None
-                else None,
-                "img_pooled_op": img_memory[0]
-                if self.CLS is not None
-                else None,  # Return the CLS token
+                "text_pooled_op": encoded_text.pooler_output if self.CLS is not None else None,
+                "img_pooled_op": img_memory[0] if self.CLS is not None else None,  # Return the CLS token
                 "mask": mask,
                 "text_attention_mask": text_attention_mask,
                 "pos_embed": pos_embed,
@@ -188,12 +165,7 @@ class Transformer(nn.Module):
             if self.pass_pos_and_query:
                 tgt = torch.zeros_like(query_embed)
             else:
-                src, tgt, query_embed, pos_embed = (
-                    src + 0.1 * pos_embed,
-                    query_embed,
-                    None,
-                    None,
-                )
+                src, tgt, query_embed, pos_embed = src + 0.1 * pos_embed, query_embed, None, None
 
             assert img_memory.shape[1] == text_memory.shape[1] == tgt.shape[1]
 
@@ -227,12 +199,7 @@ class TransformerEncoder(nn.Module):
         output = src
 
         for layer in self.layers:
-            output = layer(
-                output,
-                src_mask=mask,
-                src_key_padding_mask=src_key_padding_mask,
-                pos=pos,
-            )
+            output = layer(output, src_mask=mask, src_key_padding_mask=src_key_padding_mask, pos=pos)
 
         if self.norm is not None:
             output = self.norm(output)
@@ -294,15 +261,7 @@ class TransformerDecoder(nn.Module):
 
 
 class TransformerEncoderLayer(nn.Module):
-    def __init__(
-        self,
-        d_model,
-        nhead,
-        dim_feedforward=2048,
-        dropout=0.1,
-        activation="relu",
-        normalize_before=False,
-    ):
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu", normalize_before=False):
         super().__init__()
         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
         # Implementation of Feedforward model
@@ -329,9 +288,7 @@ class TransformerEncoderLayer(nn.Module):
         pos: Optional[Tensor] = None,
     ):
         q = k = self.with_pos_embed(src, pos)
-        src2 = self.self_attn(
-            q, k, value=src, attn_mask=src_mask, key_padding_mask=src_key_padding_mask
-        )[0]
+        src2 = self.self_attn(q, k, value=src, attn_mask=src_mask, key_padding_mask=src_key_padding_mask)[0]
         src = src + self.dropout1(src2)
         src = self.norm1(src)
         src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
@@ -348,9 +305,7 @@ class TransformerEncoderLayer(nn.Module):
     ):
         src2 = self.norm1(src)
         q = k = self.with_pos_embed(src2, pos)
-        src2 = self.self_attn(
-            q, k, value=src2, attn_mask=src_mask, key_padding_mask=src_key_padding_mask
-        )[0]
+        src2 = self.self_attn(q, k, value=src2, attn_mask=src_mask, key_padding_mask=src_key_padding_mask)[0]
         src = src + self.dropout1(src2)
         src2 = self.norm2(src)
         src2 = self.linear2(self.dropout(self.activation(self.linear1(src2))))
@@ -370,15 +325,7 @@ class TransformerEncoderLayer(nn.Module):
 
 
 class TransformerDecoderLayer(nn.Module):
-    def __init__(
-        self,
-        d_model,
-        nhead,
-        dim_feedforward=2048,
-        dropout=0.1,
-        activation="relu",
-        normalize_before=False,
-    ):
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu", normalize_before=False):
         super().__init__()
         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
         self.cross_attn_image = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
@@ -421,9 +368,7 @@ class TransformerDecoderLayer(nn.Module):
         q = k = self.with_pos_embed(tgt, query_pos)
 
         # Self attention
-        tgt2 = self.self_attn(
-            q, k, value=tgt, attn_mask=tgt_mask, key_padding_mask=tgt_key_padding_mask
-        )[0]
+        tgt2 = self.self_attn(q, k, value=tgt, attn_mask=tgt_mask, key_padding_mask=tgt_key_padding_mask)[0]
         tgt = tgt + self.dropout1(tgt2)
         tgt = self.norm1(tgt)
 
@@ -471,9 +416,7 @@ class TransformerDecoderLayer(nn.Module):
         assert False, "not implemented yet"
         tgt2 = self.norm1(tgt)
         q = k = self.with_pos_embed(tgt2, query_pos)
-        tgt2 = self.self_attn(
-            q, k, value=tgt2, attn_mask=tgt_mask, key_padding_mask=tgt_key_padding_mask
-        )[0]
+        tgt2 = self.self_attn(q, k, value=tgt2, attn_mask=tgt_mask, key_padding_mask=tgt_key_padding_mask)[0]
         tgt = tgt + self.dropout1(tgt2)
         tgt2 = self.norm2(tgt)
         tgt2 = self.multihead_attn(
@@ -504,14 +447,7 @@ class TransformerDecoderLayer(nn.Module):
     ):
         if self.normalize_before:
             return self.forward_pre(
-                tgt,
-                memory,
-                tgt_mask,
-                memory_mask,
-                tgt_key_padding_mask,
-                memory_key_padding_mask,
-                pos,
-                query_pos,
+                tgt, memory, tgt_mask, memory_mask, tgt_key_padding_mask, memory_key_padding_mask, pos, query_pos
             )
         return self.forward_post(
             tgt,
