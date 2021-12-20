@@ -35,33 +35,21 @@ def get_args_parser():
 
     # Dataset specific
     parser.add_argument("--dataset_config", default=None, required=True)
-    parser.add_argument(
-        "--do_qa", action="store_true", help="Whether to do question answering"
-    )
+    parser.add_argument("--do_qa", action="store_true", help="Whether to do question answering")
     parser.add_argument(
         "--predict_final",
         action="store_true",
         help="If true, will predict if a given box is in the actual referred set. Useful for CLEVR-Ref+ only currently.",
     )
+    parser.add_argument("--no_detection", action="store_true", help="Whether to train the detector")
     parser.add_argument(
-        "--no_detection", action="store_true", help="Whether to train the detector"
+        "--split_qa_heads", action="store_true", help="Whether to use a separate head per question type in vqa"
     )
     parser.add_argument(
-        "--split_qa_heads",
-        action="store_true",
-        help="Whether to use a separate head per question type in vqa",
+        "--combine_datasets", nargs="+", help="List of datasets to combine for training", default=["flickr"]
     )
     parser.add_argument(
-        "--combine_datasets",
-        nargs="+",
-        help="List of datasets to combine for training",
-        default=["flickr"],
-    )
-    parser.add_argument(
-        "--combine_datasets_val",
-        nargs="+",
-        help="List of datasets to combine for eval",
-        default=["flickr"],
+        "--combine_datasets_val", nargs="+", help="List of datasets to combine for eval", default=["flickr"]
     )
 
     parser.add_argument("--coco_path", type=str, default="")
@@ -71,7 +59,9 @@ def get_args_parser():
     parser.add_argument("--clevr_ann_path", type=str, default="")
     parser.add_argument("--phrasecut_ann_path", type=str, default="")
     parser.add_argument(
-        "--phrasecut_orig_ann_path", type=str, default="",
+        "--phrasecut_orig_ann_path",
+        type=str,
+        default="",
     )
     parser.add_argument("--modulated_lvis_ann_path", type=str, default="")
 
@@ -90,9 +80,7 @@ def get_args_parser():
         help="If greater than 0, will split the training set into chunks and validate/checkpoint after each chunk",
     )
     parser.add_argument("--optimizer", default="adam", type=str)
-    parser.add_argument(
-        "--clip_max_norm", default=0.1, type=float, help="gradient clipping max norm"
-    )
+    parser.add_argument("--clip_max_norm", default=0.1, type=float, help="gradient clipping max norm")
     parser.add_argument(
         "--eval_skip",
         default=1,
@@ -108,12 +96,7 @@ def get_args_parser():
     )
     parser.add_argument("--ema", action="store_true")
     parser.add_argument("--ema_decay", type=float, default=0.9998)
-    parser.add_argument(
-        "--fraction_warmup_steps",
-        default=0.01,
-        type=float,
-        help="Fraction of total number of steps",
-    )
+    parser.add_argument("--fraction_warmup_steps", default=0.01, type=float, help="Fraction of total number of steps")
 
     # Model parameters
     parser.add_argument(
@@ -124,9 +107,7 @@ def get_args_parser():
     )
 
     parser.add_argument(
-        "--freeze_text_encoder",
-        action="store_true",
-        help="Whether to freeze the weights of the text encoder",
+        "--freeze_text_encoder", action="store_true", help="Whether to freeze the weights of the text encoder"
     )
 
     parser.add_argument(
@@ -180,18 +161,14 @@ def get_args_parser():
         type=int,
         help="Size of the embeddings (dimension of the transformer)",
     )
-    parser.add_argument(
-        "--dropout", default=0.1, type=float, help="Dropout applied in the transformer"
-    )
+    parser.add_argument("--dropout", default=0.1, type=float, help="Dropout applied in the transformer")
     parser.add_argument(
         "--nheads",
         default=8,
         type=int,
         help="Number of attention heads inside the transformer's attentions",
     )
-    parser.add_argument(
-        "--num_queries", default=100, type=int, help="Number of query slots"
-    )
+    parser.add_argument("--num_queries", default=100, type=int, help="Number of query slots")
     parser.add_argument("--pre_norm", action="store_true")
     parser.add_argument(
         "--no_pass_pos_and_query",
@@ -226,11 +203,7 @@ def get_args_parser():
         help="Type of matching to perform in the loss",
     )
 
-    parser.add_argument(
-        "--contrastive_loss",
-        action="store_true",
-        help="Whether to add contrastive loss",
-    )
+    parser.add_argument("--contrastive_loss", action="store_true", help="Whether to add contrastive loss")
     parser.add_argument(
         "--no_contrastive_align_loss",
         dest="contrastive_align_loss",
@@ -246,10 +219,7 @@ def get_args_parser():
     )
 
     parser.add_argument(
-        "--temperature_NCE",
-        type=float,
-        default=0.07,
-        help="Temperature in the  temperature-scaled cross entropy loss",
+        "--temperature_NCE", type=float, default=0.07, help="Temperature in the  temperature-scaled cross entropy loss"
     )
 
     # * Matcher
@@ -289,43 +259,27 @@ def get_args_parser():
 
     # Run specific
 
-    parser.add_argument(
-        "--test",
-        action="store_true",
-        help="Whether to run evaluation on val or test set",
-    )
-    parser.add_argument(
-        "--test_type", type=str, default="test", choices=("testA", "testB", "test")
-    )
-    parser.add_argument(
-        "--output-dir", default="", help="path where to save, empty for no saving"
-    )
-    parser.add_argument(
-        "--device", default="cuda", help="device to use for training / testing"
-    )
+    parser.add_argument("--test", action="store_true", help="Whether to run evaluation on val or test set")
+    parser.add_argument("--test_type", type=str, default="test", choices=("testA", "testB", "test"))
+    parser.add_argument("--output-dir", default="", help="path where to save, empty for no saving")
+    parser.add_argument("--device", default="cuda", help="device to use for training / testing")
     parser.add_argument("--seed", default=42, type=int)
     parser.add_argument("--resume", default="", help="resume from checkpoint")
     parser.add_argument("--load", default="", help="resume from checkpoint")
-    parser.add_argument(
-        "--start-epoch", default=0, type=int, metavar="N", help="start epoch"
-    )
+    parser.add_argument("--start-epoch", default=0, type=int, metavar="N", help="start epoch")
     parser.add_argument("--eval", action="store_true", help="Only run evaluation")
     parser.add_argument("--num_workers", default=5, type=int)
 
     # Distributed training parameters
-    parser.add_argument(
-        "--world-size", default=1, type=int, help="number of distributed processes"
-    )
-    parser.add_argument(
-        "--dist-url", default="env://", help="url used to set up distributed training"
-    )
+    parser.add_argument("--world-size", default=1, type=int, help="number of distributed processes")
+    parser.add_argument("--dist-url", default="env://", help="url used to set up distributed training")
     return parser
 
 
 def main(args):
     # Init distributed mode
-    # dist.init_distributed_mode(args)
-    args.distributed = False
+    dist.init_distributed_mode(args)
+    # args.distributed = False
 
     # Update dataset specific configs
     if args.dataset_config is not None:
@@ -353,12 +307,10 @@ def main(args):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
-    torch.set_deterministic(False)
+    # torch.set_deterministic(True)
 
     # Build the model
-    model, criterion, contrastive_criterion, qa_criterion, weight_dict = build_model(
-        args
-    )
+    model, criterion, contrastive_criterion, qa_criterion, weight_dict = build_model(args)
     model.to(device)
 
     assert (
@@ -369,9 +321,7 @@ def main(args):
     model_ema = deepcopy(model) if args.ema else None
     model_without_ddp = model
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(
-            model, device_ids=[args.gpu], find_unused_parameters=True
-        )
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True, broadcast_buffers=False)
         model_without_ddp = model.module
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("number of params:", n_parameters)
@@ -386,30 +336,18 @@ def main(args):
             ]
         },
         {
-            "params": [
-                p
-                for n, p in model_without_ddp.named_parameters()
-                if "backbone" in n and p.requires_grad
-            ],
+            "params": [p for n, p in model_without_ddp.named_parameters() if "backbone" in n and p.requires_grad],
             "lr": args.lr_backbone,
         },
         {
-            "params": [
-                p
-                for n, p in model_without_ddp.named_parameters()
-                if "text_encoder" in n and p.requires_grad
-            ],
+            "params": [p for n, p in model_without_ddp.named_parameters() if "text_encoder" in n and p.requires_grad],
             "lr": args.text_encoder_lr,
         },
     ]
     if args.optimizer == "sgd":
-        optimizer = torch.optim.SGD(
-            param_dicts, lr=args.lr, momentum=0.9, weight_decay=args.weight_decay
-        )
+        optimizer = torch.optim.SGD(param_dicts, lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
     elif args.optimizer in ["adam", "adamw"]:
-        optimizer = torch.optim.AdamW(
-            param_dicts, lr=args.lr, weight_decay=args.weight_decay
-        )
+        optimizer = torch.optim.AdamW(param_dicts, lr=args.lr, weight_decay=args.weight_decay)
     else:
         raise RuntimeError(f"Unsupported optimizer {args.optimizer}")
 
@@ -420,10 +358,7 @@ def main(args):
     dataset_train, sampler_train, data_loader_train = None, None, None
     if not args.eval:
         dataset_train = ConcatDataset(
-            [
-                build_dataset(name, image_set="train", args=args)
-                for name in args.combine_datasets
-            ]
+            [build_dataset(name, image_set="train", args=args) for name in args.combine_datasets]
         )
 
         # To handle very big datasets, we chunk it into smaller parts.
@@ -433,19 +368,14 @@ def main(args):
                 f" {len(dataset_train) // args.epoch_chunks}"
             )
             chunks = torch.chunk(torch.arange(len(dataset_train)), args.epoch_chunks)
-            datasets = [
-                torch.utils.data.Subset(dataset_train, chunk.tolist())
-                for chunk in chunks
-            ]
+            datasets = [torch.utils.data.Subset(dataset_train, chunk.tolist()) for chunk in chunks]
             if args.distributed:
                 samplers_train = [DistributedSampler(ds) for ds in datasets]
             else:
                 samplers_train = [torch.utils.data.RandomSampler(ds) for ds in datasets]
 
             batch_samplers_train = [
-                torch.utils.data.BatchSampler(
-                    sampler_train, args.batch_size, drop_last=True
-                )
+                torch.utils.data.BatchSampler(sampler_train, args.batch_size, drop_last=True)
                 for sampler_train in samplers_train
             ]
             assert len(batch_samplers_train) == len(datasets)
@@ -464,9 +394,7 @@ def main(args):
             else:
                 sampler_train = torch.utils.data.RandomSampler(dataset_train)
 
-            batch_sampler_train = torch.utils.data.BatchSampler(
-                sampler_train, args.batch_size, drop_last=True
-            )
+            batch_sampler_train = torch.utils.data.BatchSampler(sampler_train, args.batch_size, drop_last=True)
             data_loader_train = DataLoader(
                 dataset_train,
                 batch_sampler=batch_sampler_train,
@@ -478,18 +406,13 @@ def main(args):
     if len(args.combine_datasets_val) == 0:
         raise RuntimeError("Please provide at leas one validation dataset")
 
-    Val_all = namedtuple(
-        typename="val_data",
-        field_names=["dataset_name", "dataloader", "base_ds", "evaluator_list"],
-    )
+    Val_all = namedtuple(typename="val_data", field_names=["dataset_name", "dataloader", "base_ds", "evaluator_list"])
 
     val_tuples = []
     for dset_name in args.combine_datasets_val:
         dset = build_dataset(dset_name, image_set="val", args=args)
         sampler = (
-            DistributedSampler(dset, shuffle=False)
-            if args.distributed
-            else torch.utils.data.SequentialSampler(dset)
+            DistributedSampler(dset, shuffle=False) if args.distributed else torch.utils.data.SequentialSampler(dset)
         )
         dataloader = DataLoader(
             dset,
@@ -500,26 +423,15 @@ def main(args):
             num_workers=args.num_workers,
         )
         base_ds = get_coco_api_from_dataset(dset)
-        val_tuples.append(
-            Val_all(
-                dataset_name=dset_name,
-                dataloader=dataloader,
-                base_ds=base_ds,
-                evaluator_list=None,
-            )
-        )
+        val_tuples.append(Val_all(dataset_name=dset_name, dataloader=dataloader, base_ds=base_ds, evaluator_list=None))
 
     if args.frozen_weights is not None:
         if args.resume.startswith("https"):
-            checkpoint = torch.hub.load_state_dict_from_url(
-                args.resume, map_location="cpu", check_hash=True
-            )
+            checkpoint = torch.hub.load_state_dict_from_url(args.resume, map_location="cpu", check_hash=True)
         else:
             checkpoint = torch.load(args.resume, map_location="cpu")
         if "model_ema" in checkpoint and checkpoint["model_ema"] is not None:
-            model_without_ddp.detr.load_state_dict(
-                checkpoint["model_ema"], strict=False
-            )
+            model_without_ddp.detr.load_state_dict(checkpoint["model_ema"], strict=False)
         else:
             model_without_ddp.detr.load_state_dict(checkpoint["model"], strict=False)
 
@@ -542,9 +454,7 @@ def main(args):
     # Used for resuming training from the checkpoint of a model. Used when training times-out or is pre-empted.
     if args.resume:
         if args.resume.startswith("https"):
-            checkpoint = torch.hub.load_state_dict_from_url(
-                args.resume, map_location="cpu", check_hash=True
-            )
+            checkpoint = torch.hub.load_state_dict_from_url(args.resume, map_location="cpu", check_hash=True)
         else:
             checkpoint = torch.load(args.resume, map_location="cpu")
         model_without_ddp.load_state_dict(checkpoint["model"])
@@ -553,9 +463,7 @@ def main(args):
             args.start_epoch = checkpoint["epoch"] + 1
         if args.ema:
             if "model_ema" not in checkpoint:
-                print(
-                    "WARNING: ema model not found in checkpoint, resetting to current model"
-                )
+                print("WARNING: ema model not found in checkpoint, resetting to current model")
                 model_ema = deepcopy(model_without_ddp)
             else:
                 model_ema.load_state_dict(checkpoint["model_ema"])
@@ -614,9 +522,7 @@ def main(args):
                 device=device,
                 args=args,
             )
-            test_stats.update(
-                {item.dataset_name + "_" + k: v for k, v in curr_test_stats.items()}
-            )
+            test_stats.update({item.dataset_name + "_" + k: v for k, v in curr_test_stats.items()})
 
         log_stats = {
             **{f"test_{k}": v for k, v in test_stats.items()},
@@ -633,9 +539,7 @@ def main(args):
         if args.epoch_chunks > 0:
             sampler_train = samplers_train[epoch % len(samplers_train)]
             data_loader_train = data_loaders_train[epoch % len(data_loaders_train)]
-            print(
-                f"Starting epoch {epoch // len(data_loaders_train)}, sub_epoch {epoch % len(data_loaders_train)}"
-            )
+            print(f"Starting epoch {epoch // len(data_loaders_train)}, sub_epoch {epoch % len(data_loaders_train)}")
         else:
             print(f"Starting epoch {epoch}")
         if args.distributed:
@@ -691,9 +595,7 @@ def main(args):
                     device=device,
                     args=args,
                 )
-                test_stats.update(
-                    {item.dataset_name + "_" + k: v for k, v in curr_test_stats.items()}
-                )
+                test_stats.update({item.dataset_name + "_" + k: v for k, v in curr_test_stats.items()})
         else:
             test_stats = {}
 
@@ -712,9 +614,7 @@ def main(args):
             if args.do_qa:
                 metric = test_stats["gqa_accuracy_answer_total_unscaled"]
             else:
-                metric = np.mean(
-                    [v[1] for k, v in test_stats.items() if "coco_eval_bbox" in k]
-                )
+                metric = np.mean([v[1] for k, v in test_stats.items() if "coco_eval_bbox" in k])
 
             if args.output_dir and metric > best_metric:
                 best_metric = metric
@@ -737,9 +637,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        "DETR training and evaluation script", parents=[get_args_parser()]
-    )
+    parser = argparse.ArgumentParser("DETR training and evaluation script", parents=[get_args_parser()])
     args = parser.parse_args()
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
