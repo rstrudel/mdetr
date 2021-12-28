@@ -278,8 +278,10 @@ def get_args_parser():
 
 def main(args):
     # Init distributed mode
-    dist.init_distributed_mode(args)
-    # args.distributed = False
+    if hasattr(args, "nodes"):
+        dist.init_distributed_mode(args)
+    else:
+        args.distributed = False
 
     # Update dataset specific configs
     if args.dataset_config is not None:
