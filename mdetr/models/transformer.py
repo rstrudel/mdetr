@@ -14,7 +14,7 @@ from typing import List, Optional
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
-from transformers import RobertaModel, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer
 
 
 class Transformer(nn.Module):
@@ -54,7 +54,7 @@ class Transformer(nn.Module):
         self.tokenizer = AutoTokenizer.from_pretrained(
             text_encoder_type, local_files_only=True
         )
-        self.text_encoder = RobertaModel.from_pretrained(
+        self.text_encoder = AutoModel.from_pretrained(
             text_encoder_type, local_files_only=True
         )
 
