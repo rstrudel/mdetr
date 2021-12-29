@@ -9,5 +9,5 @@
     "gqa_ann_path": "/gpfsscratch/rech/eta/ufz72sf/mdetr_annotations",
     "refexp_dataset_name": "all",
     "GT_type": "separate",
-    "flickr_dataset_path": "/gpfsscratch/rech/eta/ufz72sf/flickr"
+    "flickr_dataset_path": "/gpfsscratch/rech/eta/ufz72sf/flickr30k_entities"
 }
